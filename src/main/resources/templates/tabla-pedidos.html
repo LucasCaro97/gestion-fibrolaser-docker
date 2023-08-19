@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Fibrolaser - Artistica</title>
+    <link href="https://fonts.googleapis.com/css?family=Raleway:200,300,400,500&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/9cf5630080.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/estilostablas.css}">
+</head>
+<body>
+
+
+<header class="hero">
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/auth/home}">FIBROLASER</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav m-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" aria-current="page" th:href="@{/auth/home}">Pagina Principal</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="#">Productos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="#">Empresa</a></li>
+                    <li class="nav-item" sec:authorize="hasRole('CLIENTE')">
+                        <a href="#" class="nav-link text-white">Realizar Pedido</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'ATENCION')">
+                        <a th:href="@{/clientes}" class="nav-link text-white">Clientes</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'ATENCION', 'OPERADOR' , 'DISEÑADOR')">
+                        <a th:href="@{/pedidos}"  class="nav-link text-white">Pedidos</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN')">
+                        <a th:href="@{/estadospedidos}"  class="nav-link text-white">Estados Ped</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/usuarios}"  class="nav-link text-white">Usuarios</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/roles}"  class="nav-link text-white">Roles</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('OPERADOR', 'ADMIN')">
+                        <a th:href="@{/asistencias}"  class="nav-link text-white">Asistencia</a>
+                    </li>
+                </ul>
+                <a class="btn btn-dark" th:href="@{/logout}" >Cerrar Sesion</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main>
+    <div class="container p-5">
+        <div class="row">
+            <div class="col">
+                <div th:if="${exito}" th:text="${exito}" class="alert alert-success" role="alert"></div>
+
+                <div th:if="${pedidos.isEmpty()}" class="alert alert-info alert-dismissible fade show" role="alert">
+                    Debe ingresar pedidos <a th:href="@{pedidos/form}" class="alert-link">Crear Pedido</a>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div th:unless="${pedidos.isEmpty()}" class="table-responsive">
+                    <a class="btn btn-primary mb-2" th:href="@{/pedidos/form}">Crear Pedido</a>
+
+                    <form class="form-inline" th:action="@{/pedidos}">
+                        <div class="form-group mb-2">
+                            <h2>Filtro</h2>
+                        </div>
+                        <div class="form-group mx-sm-3 mb-2 d-flex gap-3 align-items-end">
+                            <div class="mb-2 col-2">
+                                <label class="form-label">Estado: </label>
+                                <select th:value="${estadoPedido}" id="estadoPedido" name="estadoPedido" class="form-select" aria-label="Seleccionar estado">
+                                    <option selected value="">Estados</option>
+                                    <option th:each="est : ${estadosPedidos}" th:text="${est.nombre}" th:value="${est.id}"></option>
+                                </select>
+                            </div>
+                            <div class="mb-2 col-2">
+                                <label class="form-label">Cliente: </label>
+                                <select th:value="${cliente}" id="cliente" name="cliente" class="form-select" aria-label="Seleccionar cliente">
+                                    <option selected value="">Clientes</option>
+                                    <option th:each="cli : ${listaClientes}" th:text="${cli.nombre}" th:value="${cli.id}"></option>
+                                </select>
+                            </div>
+                            <input type="submit" class="btn btn-info mb-2 botonesFiltro" value="Buscar">
+                            &nbsp;&nbsp;
+                            <input type="submit" class="btn btn-secondary mb-2 botonesFiltro" value="limpiar">
+                        </div>
+                    </form>
+                    <br>
+
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                        <tr class="table-dark">
+                            <th>NroPedido</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Descripcion</th>
+                            <th>Estado</th>
+                            <th>Seña</th>
+                            <th>Fecha Entrega</th>
+                            <th>Accion</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="ped : ${pedidos}">
+                            <td th:text="${ped.id}"></td>
+                            <td th:text="${ped.cliente.nombre}"></td>
+                            <td th:text="${ped.fechaIngreso}"></td>
+                            <td th:text="${ped.descripcion}"></td>
+                            <td th:text="${ped.estadoPedido.nombre}"></td>
+                            <td th:text="${ped.senia}"></td>
+                            <td th:text="${ped.fechaEntrega}"></td>
+                            <td>
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Accion
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" th:href="@{pedidos/form/__${ped.id}__}">Actualizar</a></li>
+                                    <li><a sec:authorize="hasAnyRole('ADMIN')" class="dropdown-item" th:href="@{/pedidos/delete/__${ped.id}__}">Eliminar</a></li>
+                                </ul>
+                            </td>
+
+
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+</main>
+
+<footer th:fragment="footer" class="bg-dark fixed-bottom text-center text-white py-3" >
+    <span th:text="${session.id != null} ? |${session.username} - ${session.rol}| : 'FIBROLASER'"></span>
+</footer>
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
